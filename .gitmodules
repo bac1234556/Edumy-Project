@@ -1,0 +1,6 @@
+[submodule "Edumy-main"]
+	path = Edumy-main
+	url = https://github.com/bac1234556/Edumy.git
+[submodule "Edumy-App"]
+	path = Edumy-App
+	url = https://github.com/bac1234556/Edumy-App.git
