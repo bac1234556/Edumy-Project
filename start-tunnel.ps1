@@ -5,11 +5,41 @@ Write-Host "`n==========================================================" -Foreg
 Write-Host "       KHOI DONG HE THONG EDUMY ONLINE QUA CLOUDFLARE     " -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
 
-# 1. Kiem tra Docker
-Write-Host "`n[1/3] Kiem tra cac container Docker..." -ForegroundColor Green
-$running = docker ps --filter "name=edumy_frontend" --format "{{.Names}}"
+# 1. Kiem tra Docker Engine
+Write-Host "`n[1/3] Kiem tra Docker Desktop..." -ForegroundColor Green
+$dockerRunning = $false
+try {
+    $null = docker info 2>$null
+    if ($LASTEXITCODE -eq 0) { $dockerRunning = $true }
+} catch {
+    $dockerRunning = $false
+}
+
+if (-not $dockerRunning) {
+    Write-Host "Docker Desktop chua chay. Dang tu dong khoi dong Docker Desktop..." -ForegroundColor Yellow
+    if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
+        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+    }
+    $timeout = 60
+    while ($timeout -gt 0) {
+        Start-Sleep -Seconds 3
+        try {
+            $null = docker info 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                $dockerRunning = $true
+                break
+            }
+        } catch {}
+        $timeout -= 3
+        Write-Host -NoNewline "."
+    }
+    Write-Host ""
+}
+
+# Kiem tra cac container
+$running = docker ps --filter "name=edumy_frontend" --format "{{.Names}}" 2>$null
 if (-not $running) {
-    Write-Host "Containers chua chay. Dang khoi dong..." -ForegroundColor Yellow
+    Write-Host "Containers chua chay. Dang khoi dong bang Docker Compose..." -ForegroundColor Yellow
     Push-Location "C:\Users\bacle\Downloads\Edumy-Project\Edumy-main\Edumy"
     docker compose up -d
     Pop-Location
@@ -17,11 +47,7 @@ if (-not $running) {
     Write-Host "Docker containers dang hoat dong tot!" -ForegroundColor Green
 }
 
-# 2. Dam bao Nginx proxy duoc cap nhat
-docker cp "C:\Users\bacle\Downloads\Edumy-Project\Edumy-main\Edumy\Frontend\nginx.conf" edumy_frontend:/etc/nginx/conf.d/default.conf 2>$null
-docker exec edumy_frontend nginx -s reload 2>$null
-
-# 3. Chay cloudflared
+# 2. Chay cloudflared
 Write-Host "`n[2/3] Dang tao duong link HTTPS cong khai qua Cloudflare..." -ForegroundColor Green
 $cloudflaredPath = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 
@@ -51,9 +77,11 @@ if ($tunnelUrl) {
     Write-Host "==========================================================" -ForegroundColor Green
     Write-Host "`n>> Trang Web Edumy: $tunnelUrl" -ForegroundColor Cyan
     Write-Host ">> Backend API:     $tunnelUrl/api" -ForegroundColor Cyan
-    Write-Host "`nLuu y: Ban co the gui link tren cho thay co hoac ban be vao test thoai mai!" -ForegroundColor White
-    Write-Host "Cua so nay can duoc GIU BAT trong suot thoi gian muon chay server online.`n" -ForegroundColor Yellow
-    Write-Host "Nhan Ctrl + C de dung server online.`n" -ForegroundColor Gray
+    Write-Host "`nLuu y:" -ForegroundColor White
+    Write-Host "1. Ban co the gui link tren cho thay co hoac ban be test tu xa!" -ForegroundColor Gray
+    Write-Host "2. Neu ban test tren chinh may tinh nay, co the dung truc tiep: http://localhost:3000" -ForegroundColor Gray
+    Write-Host "3. Cua so nay can duoc GIU MO trong suot luc muon chay online." -ForegroundColor Yellow
+    Write-Host "`nNhan Ctrl + C de dung server online.`n" -ForegroundColor DarkGray
     
     # Cap nhat vao .env cua Mobile App
     $envPath = "C:\Users\bacle\Downloads\Edumy-Project\Edumy-App\.env"
