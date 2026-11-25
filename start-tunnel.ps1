@@ -53,7 +53,7 @@ $cloudflaredPath = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 
 $processInfo = New-Object System.Diagnostics.ProcessStartInfo
 $processInfo.FileName = $cloudflaredPath
-$processInfo.Arguments = "tunnel --protocol http2 --url http://localhost:3000"
+$processInfo.Arguments = "tunnel --config NUL --protocol http2 --url http://localhost:3000"
 $processInfo.RedirectStandardError = $true
 $processInfo.UseShellExecute = $false
 $processInfo.CreateNoWindow = $true
